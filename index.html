@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blink Studio — Cuéntanos sobre tu proyecto</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0e0e0e;
+    --paper: #f5f2ec;
+    --accent: #c8ff00;
+    --accent2: #ff4d1c;
+    --muted: #888880;
+    --border: #d4d0c8;
+    --card: #ffffff;
+    --radius: 2px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo { font-family: 'DM Mono', monospace; font-size: 15px; letter-spacing: 0.12em; font-weight: 500; }
+  .logo span { color: var(--accent); }
+
+  .step-indicator { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+
+  .progress-bar { height: 3px; background: var(--border); }
+  .progress-fill { height: 100%; background: var(--accent); transition: width 0.5s cubic-bezier(0.4,0,0.2,1); width: 12.5%; }
+
+  main { max-width: 720px; margin: 0 auto; padding: 56px 24px 100px; }
+
+  .intro { margin-bottom: 52px; opacity: 0; animation: fadeUp 0.6s 0.1s forwards; }
+  .intro-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .intro h1 { font-family: 'DM Serif Display', serif; font-size: clamp(30px, 6vw, 50px); line-height: 1.1; font-weight: 400; margin-bottom: 18px; }
+  .intro h1 em { color: var(--accent2); font-style: italic; }
+  .intro p { font-size: 15px; line-height: 1.7; color: #555; max-width: 520px; }
+
+  .step { display: none; opacity: 0; animation: fadeUp 0.4s forwards; }
+  .step.active { display: block; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+  .step-num { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .step-question { font-family: 'DM Serif Display', serif; font-size: clamp(20px, 4vw, 30px); font-weight: 400; line-height: 1.2; margin-bottom: 6px; }
+  .step-hint { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+
+  /* SERVICE GRID */
+  .service-category { margin-bottom: 28px; }
+  .category-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .cat-icon { font-size: 14px; }
+
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+  .svc-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 14px 12px; cursor: pointer; transition: all 0.15s ease; background: var(--card); position: relative; user-select: none; }
+  .svc-card:hover { border-color: var(--ink); transform: translateY(-1px); }
+  .svc-card.selected { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+  .svc-card.selected .svc-name { color: var(--paper); }
+  .svc-card.selected .svc-sub { color: #aaa; }
+  .svc-card.selected .svc-check { background: var(--accent); border-color: var(--accent); color: var(--ink); }
+
+  .svc-check { position: absolute; top: 10px; right: 10px; width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; transition: all 0.15s; }
+  .svc-emoji { font-size: 20px; margin-bottom: 6px; display: block; }
+  .svc-name { font-weight: 500; font-size: 13px; display: block; margin-bottom: 2px; }
+  .svc-sub { font-size: 11px; color: var(--muted); line-height: 1.3; }
+
+  .selection-counter { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); margin: 12px 0 32px; }
+  .selection-counter strong { color: var(--ink); }
+
+  /* OPTION CARDS */
+  .options-grid { display: grid; gap: 10px; margin-bottom: 36px; }
+  .options-grid.two-col { grid-template-columns: 1fr 1fr; }
+
+  .option-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 18px; cursor: pointer; transition: all 0.15s ease; background: var(--card); position: relative; user-select: none; }
+  .option-card:hover { border-color: var(--ink); transform: translateY(-1px); }
+  .option-card.selected { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+  .option-card.selected .option-label { color: var(--paper); }
+  .option-card.selected .option-desc { color: #aaa; }
+  .option-card.selected .option-check { background: var(--accent); border-color: var(--accent); color: var(--ink); }
+
+  .option-check { position: absolute; top: 13px; right: 14px; width: 17px; height: 17px; border: 1.5px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; transition: all 0.15s; }
+  .option-emoji { font-size: 20px; margin-bottom: 6px; display: block; }
+  .option-label { font-weight: 500; font-size: 14px; color: var(--ink); display: block; margin-bottom: 2px; }
+  .option-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+  /* CHIPS */
+  .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 36px; }
+  .chip { border: 1.5px solid var(--border); border-radius: 100px; padding: 9px 18px; font-size: 13px; cursor: pointer; transition: all 0.15s; background: var(--card); }
+  .chip:hover { border-color: var(--ink); }
+  .chip.selected { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+  /* RANGE */
+  .range-wrapper { margin-bottom: 36px; }
+  .range-display { font-family: 'DM Serif Display', serif; font-size: 40px; margin-bottom: 6px; }
+  .range-display span { font-size: 16px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; background: var(--border); border-radius: 2px; outline: none; margin: 14px 0; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); cursor: pointer; transition: transform 0.15s; border: 3px solid var(--accent); }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .range-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  /* TEXT INPUT */
+  .text-input-wrap { margin-bottom: 36px; }
+  textarea, input[type=text], input[type=tel], input[type=email] { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 300; color: var(--ink); background: var(--card); outline: none; transition: border-color 0.15s; resize: none; }
+  textarea:focus, input:focus { border-color: var(--ink); }
+  textarea { min-height: 110px; line-height: 1.6; }
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .input-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 7px; display: block; }
+
+  /* NAV */
+  .nav-row { display: flex; align-items: center; gap: 14px; padding-top: 8px; }
+  .btn-next { background: var(--ink); color: var(--paper); border: none; padding: 13px 28px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: var(--radius); transition: all 0.15s; }
+  .btn-next:hover { background: #222; transform: translateX(2px); }
+  .btn-next:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .btn-back { background: none; border: none; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); cursor: pointer; padding: 13px 0; transition: color 0.15s; }
+  .btn-back:hover { color: var(--ink); }
+  .btn-back.hidden { visibility: hidden; }
+
+  /* SUMMARY */
+  #summary-view { display: none; }
+  .summary-header { text-align: center; margin-bottom: 44px; opacity: 0; animation: fadeUp 0.5s 0.1s forwards; }
+  .summary-check { width: 60px; height: 60px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 26px; }
+  .summary-header h2 { font-family: 'DM Serif Display', serif; font-size: 34px; font-weight: 400; margin-bottom: 10px; }
+  .summary-header p { color: var(--muted); font-size: 14px; }
+
+  .summary-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; opacity: 0; animation: fadeUp 0.5s 0.25s forwards; }
+  .summary-card-header { background: var(--ink); color: var(--paper); padding: 12px 18px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .summary-row { padding: 12px 18px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 180px 1fr; gap: 12px; font-size: 13px; line-height: 1.5; }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-key { color: var(--muted); font-size: 12px; }
+  .summary-tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .summary-tag { background: var(--ink); color: var(--paper); font-size: 11px; font-family: 'DM Mono', monospace; padding: 3px 10px; border-radius: 100px; }
+
+  .btn-copy { width: 100%; background: var(--ink); color: var(--paper); border: none; padding: 15px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: var(--radius); transition: all 0.15s; margin-bottom: 10px; opacity: 0; animation: fadeUp 0.5s 0.4s forwards; }
+  .btn-copy:hover { background: #222; }
+  .btn-restart { width: 100%; background: none; border: 1.5px solid var(--border); padding: 13px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: var(--radius); transition: all 0.15s; color: var(--muted); opacity: 0; animation: fadeUp 0.5s 0.5s forwards; }
+  .btn-restart:hover { border-color: var(--ink); color: var(--ink); }
+
+  .copied-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--ink); color: var(--accent); font-family: 'DM Mono', monospace; font-size: 12px; padding: 11px 22px; border-radius: 100px; letter-spacing: 0.08em; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 999; }
+  .copied-toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    header { padding: 16px 20px; }
+    main { padding: 36px 16px 80px; }
+    .services-grid { grid-template-columns: 1fr 1fr; }
+    .options-grid.two-col { grid-template-columns: 1fr; }
+    .input-row { grid-template-columns: 1fr; }
+    .range-display { font-size: 32px; }
+    .summary-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+  @media (max-width: 380px) { .services-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">BLINK<span>.</span>STUDIO</div>
+  <div class="step-indicator" id="step-label">Paso 1 de 8</div>
+</header>
+<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+<main>
+  <div class="intro" id="intro-block">
+    <div class="intro-label">Formulario de Brief</div>
+    <h1>Cuéntanos sobre<br>tu <em>proyecto</em></h1>
+    <p>Antes de agendar una llamada, queremos entender bien tu visión. Son 8 preguntas rápidas — menos de 4 minutos.</p>
+  </div>
+
+  <div id="form-steps">
+
+    <!-- STEP 1: Servicios (MULTI-SELECT) -->
+    <div class="step active" data-step="1">
+      <div class="step-num">01 — Servicios</div>
+      <div class="step-question">¿Qué servicios necesitas?</div>
+      <div class="step-hint">Puedes seleccionar uno o varios. Después priorizamos juntos.</div>
+
+      <div class="service-category">
+        <div class="category-label"><span class="cat-icon">💻</span> Desarrollo Web</div>
+        <div class="services-grid">
+          <div class="svc-card" data-val="Sitio web corporativo" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🏢</span><span class="svc-name">Sitio corporativo</span><span class="svc-sub">Presencia profesional, servicios, landing</span></div>
+          <div class="svc-card" data-val="E-commerce / Tienda online" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🛒</span><span class="svc-name">E-commerce / Tienda</span><span class="svc-sub">Shopify, tienda a medida</span></div>
+          <div class="svc-card" data-val="Plataforma / App web / SaaS" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">⚙️</span><span class="svc-name">Plataforma / App web</span><span class="svc-sub">Dashboard, SaaS, sistema interno</span></div>
+          <div class="svc-card" data-val="Landing page / Página de campaña" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🎯</span><span class="svc-name">Landing page</span><span class="svc-sub">Página de campaña o producto</span></div>
+          <div class="svc-card" data-val="Rediseño web" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🔄</span><span class="svc-name">Rediseño web</span><span class="svc-sub">Mejorar un sitio existente</span></div>
+          <div class="svc-card" data-val="Mantenimiento y soporte web" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🔧</span><span class="svc-name">Mantenimiento web</span><span class="svc-sub">Actualizaciones, soporte técnico</span></div>
+        </div>
+      </div>
+
+      <div class="service-category">
+        <div class="category-label"><span class="cat-icon">✦</span> Branding & Diseño</div>
+        <div class="services-grid">
+          <div class="svc-card" data-val="Identidad de marca / Branding" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🎨</span><span class="svc-name">Branding / Identidad</span><span class="svc-sub">Logo, colores, tipografía, sistema</span></div>
+          <div class="svc-card" data-val="Diseño de materiales impresos" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🖨️</span><span class="svc-name">Diseño impreso</span><span class="svc-sub">Tarjetas, flyers, menús, señalética</span></div>
+          <div class="svc-card" data-val="Diseño UI/UX" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">📐</span><span class="svc-name">UI / UX Design</span><span class="svc-sub">Wireframes, prototipos, diseño de app</span></div>
+        </div>
+      </div>
+
+      <div class="service-category">
+        <div class="category-label"><span class="cat-icon">📱</span> Redes Sociales</div>
+        <div class="services-grid">
+          <div class="svc-card" data-val="Gestión de redes sociales (community management)" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">📲</span><span class="svc-name">Community Management</span><span class="svc-sub">Manejo de cuentas e interacciones</span></div>
+          <div class="svc-card" data-val="Creación de contenido para redes" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">✏️</span><span class="svc-name">Creación de contenido</span><span class="svc-sub">Posts, reels, stories, copy</span></div>
+          <div class="svc-card" data-val="Estrategia de contenido / Calendario editorial" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🗓️</span><span class="svc-name">Estrategia de contenido</span><span class="svc-sub">Calendario editorial, lineamientos</span></div>
+          <div class="svc-card" data-val="Fotografía / Video para redes" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">📸</span><span class="svc-name">Foto / Video</span><span class="svc-sub">Sesiones para contenido digital</span></div>
+        </div>
+      </div>
+
+      <div class="service-category">
+        <div class="category-label"><span class="cat-icon">📣</span> Publicidad Pagada & Marketing</div>
+        <div class="services-grid">
+          <div class="svc-card" data-val="Meta Ads (Facebook / Instagram)" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">👥</span><span class="svc-name">Meta Ads</span><span class="svc-sub">Campañas Facebook & Instagram</span></div>
+          <div class="svc-card" data-val="Google Ads / SEM" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🔍</span><span class="svc-name">Google Ads / SEM</span><span class="svc-sub">Búsqueda, display, YouTube</span></div>
+          <div class="svc-card" data-val="TikTok Ads" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">🎵</span><span class="svc-name">TikTok Ads</span><span class="svc-sub">Campañas en TikTok</span></div>
+          <div class="svc-card" data-val="Estrategia de pauta digital integral" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">📊</span><span class="svc-name">Estrategia de pauta</span><span class="svc-sub">Planeación y optimización integral</span></div>
+          <div class="svc-card" data-val="Email marketing / Automatizaciones" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">📧</span><span class="svc-name">Email Marketing</span><span class="svc-sub">Newsletters, flows, automatizaciones</span></div>
+          <div class="svc-card" data-val="SEO / Posicionamiento orgánico" onclick="toggleService(this)"><span class="svc-check">✓</span><span class="svc-emoji">📈</span><span class="svc-name">SEO</span><span class="svc-sub">Posicionamiento orgánico en buscadores</span></div>
+        </div>
+      </div>
+
+      <div class="selection-counter" id="svc-counter">Selecciona al menos un servicio</div>
+      <div class="nav-row">
+        <button class="btn-back hidden">← Atrás</button>
+        <button class="btn-next" id="btn-s1" onclick="nextStep()" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Industria -->
+    <div class="step" data-step="2">
+      <div class="step-num">02 — Industria</div>
+      <div class="step-question">¿En qué industria opera tu negocio?</div>
+      <div class="step-hint">Esto nos ayuda a entender tu contexto y audiencia.</div>
+      <div class="options-grid two-col" id="s2-options">
+        <div class="option-card" data-val="Moda / Retail / Boutique" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">👗</span><span class="option-label">Moda / Boutique</span></div>
+        <div class="option-card" data-val="Salud / Médico / Bienestar" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">🩺</span><span class="option-label">Salud / Bienestar</span></div>
+        <div class="option-card" data-val="Restaurante / Alimentos / Bebidas" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">🍽️</span><span class="option-label">Food & Beverage</span></div>
+        <div class="option-card" data-val="Tecnología / Software / Startup" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">💻</span><span class="option-label">Tecnología / Startup</span></div>
+        <div class="option-card" data-val="Industria / Manufactura / B2B" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">🏭</span><span class="option-label">Industria / B2B</span></div>
+        <div class="option-card" data-val="Servicios profesionales / Consultoría" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">📋</span><span class="option-label">Servicios / Consultoría</span></div>
+        <div class="option-card" data-val="Educación / Academia" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">🎓</span><span class="option-label">Educación</span></div>
+        <div class="option-card" data-val="Bienes raíces / Inmobiliaria" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">🏠</span><span class="option-label">Bienes raíces</span></div>
+        <div class="option-card" data-val="Turismo / Hospitalidad / Hotel" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">✈️</span><span class="option-label">Turismo / Hotel</span></div>
+        <div class="option-card" data-val="Otra industria" onclick="selectOption(this,'s2')"><span class="option-check">✓</span><span class="option-emoji">🌐</span><span class="option-label">Otra</span></div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep()">← Atrás</button>
+        <button class="btn-next" id="btn-s2" onclick="nextStep()" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Objetivo -->
+    <div class="step" data-step="3">
+      <div class="step-num">03 — Objetivo principal</div>
+      <div class="step-question">¿Cuál es el objetivo más importante ahora mismo?</div>
+      <div class="step-hint">El que tiene más prioridad para tu negocio en este momento.</div>
+      <div class="options-grid" id="s3-options">
+        <div class="option-card" data-val="Generar más ventas y clientes" onclick="selectOption(this,'s3')"><span class="option-check">✓</span><span class="option-label">Generar más ventas / clientes</span><span class="option-desc">Quiero que el proyecto traiga clientes reales</span></div>
+        <div class="option-card" data-val="Establecer presencia digital profesional" onclick="selectOption(this,'s3')"><span class="option-check">✓</span><span class="option-label">Establecer presencia profesional</span><span class="option-desc">Darle credibilidad y seriedad a mi marca online</span></div>
+        <div class="option-card" data-val="Automatizar o digitalizar procesos" onclick="selectOption(this,'s3')"><span class="option-check">✓</span><span class="option-label">Digitalizar / Automatizar procesos</span><span class="option-desc">Reducir trabajo manual y mejorar operaciones</span></div>
+        <div class="option-card" data-val="Lanzar un nuevo producto o servicio" onclick="selectOption(this,'s3')"><span class="option-check">✓</span><span class="option-label">Lanzar un nuevo producto o servicio</span><span class="option-desc">Necesito todo para un lanzamiento</span></div>
+        <div class="option-card" data-val="Crecer y escalar presencia en redes sociales" onclick="selectOption(this,'s3')"><span class="option-check">✓</span><span class="option-label">Crecer presencia en redes / audiencia</span><span class="option-desc">Aumentar seguidores, alcance y engagement</span></div>
+        <div class="option-card" data-val="Mejorar ROI / resultados de publicidad pagada" onclick="selectOption(this,'s3')"><span class="option-check">✓</span><span class="option-label">Mejorar ROI de publicidad</span><span class="option-desc">Tengo campañas activas pero no están rindiendo</span></div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep()">← Atrás</button>
+        <button class="btn-next" id="btn-s3" onclick="nextStep()" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Descripción -->
+    <div class="step" data-step="4">
+      <div class="step-num">04 — Contexto</div>
+      <div class="step-question">Cuéntanos tu idea con tus palabras.</div>
+      <div class="step-hint">¿Qué tienes en mente? ¿Qué problema quieres resolver? ¿Dónde estás hoy y a dónde quieres llegar?</div>
+      <div class="text-input-wrap">
+        <textarea id="s4-text" placeholder="Ej: Tengo una boutique en León, vendo ropa de diseñador. Quiero vender en línea y también mejorar mi presencia en Instagram para atraer más clientas..." oninput="checkTextStep('s4-text','btn-s4',20)"></textarea>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep()">← Atrás</button>
+        <button class="btn-next" id="btn-s4" onclick="nextStep()" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Presencia actual (multi) -->
+    <div class="step" data-step="5">
+      <div class="step-num">05 — Presencia actual</div>
+      <div class="step-question">¿Qué tienes actualmente?</div>
+      <div class="step-hint">Selecciona todo lo que ya existe. Si empiezas desde cero, también está bien.</div>
+      <div class="services-grid" id="s5-current">
+        <div class="svc-card" data-val="Sitio web" onclick="toggleMulti(this,'s5','Presencia actual')"><span class="svc-check">✓</span><span class="svc-emoji">🌐</span><span class="svc-name">Sitio web</span></div>
+        <div class="svc-card" data-val="Instagram activo" onclick="toggleMulti(this,'s5','Presencia actual')"><span class="svc-check">✓</span><span class="svc-emoji">📸</span><span class="svc-name">Instagram</span></div>
+        <div class="svc-card" data-val="Facebook activo" onclick="toggleMulti(this,'s5','Presencia actual')"><span class="svc-check">✓</span><span class="svc-emoji">👥</span><span class="svc-name">Facebook</span></div>
+        <div class="svc-card" data-val="TikTok activo" onclick="toggleMulti(this,'s5','Presencia actual')"><span class="svc-check">✓</span><span class="svc-emoji">🎵</span><span class="svc-name">TikTok</span></div>
+        <div class="svc-card" data-val="Google My Business / Maps" onclick="toggleMulti(this,'s5','Presencia actual')"><span class="svc-check">✓</span><span class="svc-emoji">📍</span><span class="svc-name">Google Maps / GMB</span></div>
+        <div class="svc-card" data-val="Campañas pagadas activas" onclick="toggleMulti(this,'s5','Presencia actual')"><span class="svc-check">✓</span><span class="svc-emoji">📣</span><span class="svc-name">Campañas activas</span></div>
+        <div class="svc-card" data-val="Branding / Logo definido" onclick="toggleMulti(this,'s5','Presencia actual')"><span class="svc-check">✓</span><span class="svc-emoji">✦</span><span class="svc-name">Logo / Branding</span></div>
+        <div class="svc-card" data-val="Inicio desde cero — sin presencia digital" onclick="toggleMulti(this,'s5','Presencia actual')"><span class="svc-check">✓</span><span class="svc-emoji">🆕</span><span class="svc-name">Inicio desde cero</span></div>
+      </div>
+      <div class="selection-counter" id="s5-counter" style="margin-bottom:32px">Opcional — selecciona lo que aplique</div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep()">← Atrás</button>
+        <button class="btn-next" id="btn-s5" onclick="nextStep()">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: Timeline -->
+    <div class="step" data-step="6">
+      <div class="step-num">06 — Tiempo</div>
+      <div class="step-question">¿En cuánto tiempo necesitas resultados?</div>
+      <div class="step-hint">Nos ayuda a priorizar y dimensionar el proyecto correctamente.</div>
+      <div class="chips" id="s6-chips">
+        <div class="chip" data-val="Urgente — menos de 2 semanas" onclick="selectChip(this,'s6')">Urgente — menos de 2 semanas</div>
+        <div class="chip" data-val="1 mes" onclick="selectChip(this,'s6')">1 mes</div>
+        <div class="chip" data-val="1 a 3 meses" onclick="selectChip(this,'s6')">1 a 3 meses</div>
+        <div class="chip" data-val="3 a 6 meses" onclick="selectChip(this,'s6')">3 a 6 meses</div>
+        <div class="chip" data-val="Más de 6 meses / Sin prisa" onclick="selectChip(this,'s6')">Más de 6 meses / Sin prisa</div>
+        <div class="chip" data-val="No lo sé aún" onclick="selectChip(this,'s6')">No lo sé aún</div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep()">← Atrás</button>
+        <button class="btn-next" id="btn-s6" onclick="nextStep()" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 7: Presupuesto -->
+    <div class="step" data-step="7">
+      <div class="step-num">07 — Presupuesto</div>
+      <div class="step-question">¿Cuál es tu presupuesto aproximado?</div>
+      <div class="step-hint">En pesos mexicanos (MXN), sin IVA. No te compromete a nada — nos ayuda a proponer la solución correcta.</div>
+      <div class="range-wrapper">
+        <div class="range-display" id="budget-display">$25,000 <span>MXN</span></div>
+        <input type="range" id="budget-range" min="0" max="15" value="3" step="1" oninput="updateBudget(this.value)">
+        <div class="range-labels"><span>Explorar opciones</span><span>Sin límite definido</span></div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep()">← Atrás</button>
+        <button class="btn-next" id="btn-s7" onclick="nextStep()">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- STEP 8: Contacto -->
+    <div class="step" data-step="8">
+      <div class="step-num">08 — Tus datos</div>
+      <div class="step-question">¿Con quién tenemos el gusto?</div>
+      <div class="step-hint">Para enviarte la propuesta y agendar una llamada.</div>
+      <div class="input-row">
+        <div><label class="input-label">Nombre *</label><input type="text" id="s8-name" placeholder="Tu nombre" oninput="checkContactStep()"></div>
+        <div><label class="input-label">Empresa / Marca</label><input type="text" id="s8-company" placeholder="Nombre de tu negocio"></div>
+      </div>
+      <div class="input-row">
+        <div><label class="input-label">WhatsApp / Teléfono *</label><input type="tel" id="s8-phone" placeholder="+52 477 000 0000" oninput="checkContactStep()"></div>
+        <div><label class="input-label">Correo electrónico</label><input type="email" id="s8-email" placeholder="correo@empresa.com"></div>
+      </div>
+      <div style="margin-bottom:36px">
+        <label class="input-label">¿Cómo llegaste a Blink Studio?</label>
+        <input type="text" id="s8-source" placeholder="Ej: WhatsApp, referido, Instagram, Google...">
+      </div>
+      <div class="nav-row">
+        <button class="btn-back" onclick="prevStep()">← Atrás</button>
+        <button class="btn-next" id="btn-s8" onclick="showSummary()" disabled>Ver resumen →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="summary-view">
+    <div class="summary-header">
+      <div class="summary-check">✓</div>
+      <h2>¡Listo, <span id="summary-name-title">gracias</span>!</h2>
+      <p>Aquí tienes el resumen de tu brief. Cópialo para compartirlo o guardarlo.</p>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-header">Brief completo — Blink Studio</div>
+      <div id="summary-rows"></div>
+    </div>
+    <button class="btn-copy" onclick="copyBrief()">📋 Copiar brief completo</button>
+    <button class="btn-restart" onclick="restart()">← Llenar de nuevo</button>
+  </div>
+
+</main>
+
+<div class="copied-toast" id="toast">¡Brief copiado al portapapeles!</div>
+
+<script>
+  let currentStep = 1;
+  const totalSteps = 8;
+  const answers = {};
+  const multiSelections = { s1: [], s5: [] };
+
+  const budgetValues = [
+    { label: 'Sin definir / Explorar opciones' },
+    { val: 5000, label: '$5,000 MXN' },
+    { val: 10000, label: '$10,000 MXN' },
+    { val: 25000, label: '$25,000 MXN' },
+    { val: 40000, label: '$40,000 MXN' },
+    { val: 60000, label: '$60,000 MXN' },
+    { val: 80000, label: '$80,000 MXN' },
+    { val: 100000, label: '$100,000 MXN' },
+    { val: 120000, label: '$120,000 MXN' },
+    { val: 150000, label: '$150,000 MXN' },
+    { val: 200000, label: '$200,000 MXN' },
+    { val: 250000, label: '$250,000 MXN' },
+    { val: 300000, label: '$300,000 MXN' },
+    { val: 400000, label: '$400,000 MXN' },
+    { val: 500000, label: '$500,000 MXN' },
+    { label: 'Más de $500,000 MXN / Sin límite definido' }
+  ];
+
+  updateBudget(3);
+
+  function updateBudget(idx) {
+    const b = budgetValues[parseInt(idx)];
+    const d = document.getElementById('budget-display');
+    d.innerHTML = b.val ? '$' + b.val.toLocaleString('es-MX') + ' <span>MXN</span>' : (b.label.includes('Sin definir') ? 'Por definir <span>MXN</span>' : b.label);
+    answers['Presupuesto'] = b.label;
+  }
+
+  function toggleService(el) {
+    el.classList.toggle('selected');
+    const val = el.dataset.val;
+    const arr = multiSelections.s1;
+    const idx = arr.indexOf(val);
+    if (idx > -1) arr.splice(idx, 1); else arr.push(val);
+    const count = arr.length;
+    document.getElementById('svc-counter').innerHTML = count === 0 ? 'Selecciona al menos un servicio' : `<strong>${count} servicio${count > 1 ? 's' : ''} seleccionado${count > 1 ? 's' : ''}</strong>`;
+    document.getElementById('btn-s1').disabled = count === 0;
+    answers['Servicios solicitados'] = arr.join(', ');
+  }
+
+  function toggleMulti(el, group, key) {
+    el.classList.toggle('selected');
+    const val = el.dataset.val;
+    if (!multiSelections[group]) multiSelections[group] = [];
+    const arr = multiSelections[group];
+    const idx = arr.indexOf(val);
+    if (idx > -1) arr.splice(idx, 1); else arr.push(val);
+    const count = arr.length;
+    const counter = document.getElementById(`${group}-counter`);
+    if (counter) counter.innerHTML = count === 0 ? 'Opcional — selecciona lo que aplique' : `<strong>${count} seleccionado${count > 1 ? 's' : ''}</strong>`;
+    answers[key] = arr.length ? arr.join(', ') : 'Ninguno / Inicio desde cero';
+  }
+
+  function selectOption(el, group) {
+    document.querySelectorAll(`#${group}-options .option-card`).forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const map = { s2: 'Industria', s3: 'Objetivo principal' };
+    answers[map[group]] = el.dataset.val;
+    document.getElementById(`btn-${group}`).disabled = false;
+  }
+
+  function selectChip(el, group) {
+    document.querySelectorAll(`#${group}-chips .chip`).forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    answers['Timeline'] = el.dataset.val;
+    document.getElementById('btn-s6').disabled = false;
+  }
+
+  function checkTextStep(inputId, btnId, minLen) {
+    document.getElementById(btnId).disabled = document.getElementById(inputId).value.trim().length < minLen;
+  }
+
+  function checkContactStep() {
+    const name = document.getElementById('s8-name').value.trim();
+    const phone = document.getElementById('s8-phone').value.trim();
+    document.getElementById('btn-s8').disabled = !(name.length > 1 && phone.length > 7);
+  }
+
+  function nextStep() {
+    if (currentStep === 4) answers['Descripción del proyecto'] = document.getElementById('s4-text').value.trim();
+    goToStep(currentStep + 1);
+  }
+  function prevStep() { goToStep(currentStep - 1); }
+
+  function goToStep(n) {
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+    currentStep = n;
+    const el = document.querySelector(`.step[data-step="${currentStep}"]`);
+    el.classList.add('active');
+    el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateProgress() {
+    document.getElementById('progress-fill').style.width = (currentStep / totalSteps * 100) + '%';
+    document.getElementById('step-label').textContent = `Paso ${currentStep} de ${totalSteps}`;
+  }
+
+  async function showSummary() {
+    answers['Nombre'] = document.getElementById('s8-name').value.trim();
+    answers['Empresa / Marca'] = document.getElementById('s8-company').value.trim() || '—';
+    answers['WhatsApp / Teléfono'] = document.getElementById('s8-phone').value.trim();
+    answers['Correo electrónico'] = document.getElementById('s8-email').value.trim() || '—';
+    answers['¿Cómo llegó a Blink?'] = document.getElementById('s8-source').value.trim() || '—';
+
+    // Submit to Formspree
+    try {
+      await fetch('https://formspree.io/f/xeevrzwj', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(answers)
+      });
+    } catch(e) {
+      console.warn('Formspree error:', e);
+    }
+
+    document.getElementById('form-steps').style.display = 'none';
+    document.getElementById('intro-block').style.display = 'none';
+    document.getElementById('summary-view').style.display = 'block';
+    document.getElementById('summary-name-title').textContent = answers['Nombre'].split(' ')[0];
+
+    const order = ['Nombre','Empresa / Marca','WhatsApp / Teléfono','Correo electrónico','Servicios solicitados','Industria','Objetivo principal','Descripción del proyecto','Presencia actual','Timeline','Presupuesto','¿Cómo llegó a Blink?'];
+    const tagFields = ['Servicios solicitados', 'Presencia actual'];
+
+    document.getElementById('summary-rows').innerHTML = order.map(k => {
+      if (!answers[k]) return '';
+      if (tagFields.includes(k) && answers[k] !== '—') {
+        const tags = answers[k].split(', ').map(t => `<span class="summary-tag">${t}</span>`).join('');
+        return `<div class="summary-row"><div class="summary-key">${k}</div><div class="summary-val"><div class="summary-tag-list">${tags}</div></div></div>`;
+      }
+      return `<div class="summary-row"><div class="summary-key">${k}</div><div class="summary-val">${answers[k]}</div></div>`;
+    }).join('');
+
+    document.getElementById('step-label').textContent = '¡Completado!';
+    document.getElementById('progress-fill').style.width = '100%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function copyBrief() {
+    const order = ['Nombre','Empresa / Marca','WhatsApp / Teléfono','Correo electrónico','Servicios solicitados','Industria','Objetivo principal','Descripción del proyecto','Presencia actual','Timeline','Presupuesto','¿Cómo llegó a Blink?'];
+    const lines = ['📋 BRIEF — BLINK STUDIO', '═'.repeat(40), ''];
+    order.forEach(k => { if (answers[k]) lines.push(`▸ ${k}:\n  ${answers[k]}\n`); });
+    lines.push('═'.repeat(40));
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    });
+  }
+
+  function restart() {
+    Object.keys(answers).forEach(k => delete answers[k]);
+    multiSelections.s1 = []; multiSelections.s5 = [];
+    currentStep = 1;
+    document.getElementById('summary-view').style.display = 'none';
+    document.getElementById('form-steps').style.display = 'block';
+    document.getElementById('intro-block').style.display = 'block';
+    document.querySelectorAll('.svc-card, .option-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+    ['s4-text','s8-name','s8-company','s8-phone','s8-email','s8-source'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+    document.getElementById('svc-counter').innerHTML = 'Selecciona al menos un servicio';
+    document.getElementById('s5-counter').innerHTML = 'Opcional — selecciona lo que aplique';
+    ['btn-s1','btn-s2','btn-s3','btn-s4','btn-s6','btn-s8'].forEach(id => document.getElementById(id).disabled = true);
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.querySelector('.step[data-step="1"]').classList.add('active');
+    updateBudget(3);
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
